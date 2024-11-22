@@ -1,0 +1,23 @@
+name: gateway
+namespace: avknyazhev
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/muhomorfus/ds-lab-04
+  tag: latest
+
+postgresql:
+  host: ""
+  port: 0
+  user: ""
+  password: ""
+  db: ""
+  sslEnabled: ""
+
+services:
+  library: http://library
+  rating: http://rating
+  reservation: http://reservation
+
+port: 80

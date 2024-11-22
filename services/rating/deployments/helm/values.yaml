@@ -1,0 +1,23 @@
+name: rating
+namespace: avknyazhev
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/muhomorfus/ds-lab-04
+  tag: latest
+
+postgresql:
+  host: rating-db
+  port: 5432
+  user: program
+  password: ""
+  db: postgres
+  sslEnabled: true
+
+services:
+  library: ""
+  rating: ""
+  reservation: ""
+
+port: 80

@@ -4,7 +4,127 @@ on:
     branches: [ master ]
 jobs:
   build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.2"
+
+      - name: Get dependencies
+        working-directory: ./services
+        run: go mod tidy
+
+      - name: Build library
+        working-directory: ./services
+        run: go build ./library/cmd/service/main.go
+
+      - name: Build rating
+        working-directory: ./services
+        run: go build ./rating/cmd/service/main.go
+
+      - name: Build reservation
+        working-directory: ./services
+        run: go build ./reservation/cmd/service/main.go
+
+      - name: Build gateway
+        working-directory: ./services
+        run: go build ./gateway/cmd/service/main.go
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.2"
+
+      - name: Get dependencies
+        working-directory: ./services
+        run: go mod tidy
+
+      - name: Test all
+        working-directory: ./services
+        run: go test -cover ./...
+
+  deploy:
+    name: Deploy
+    needs: [ "build", "test" ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Login
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./services
+          file: ./Dockerfile
+          push: true
+          tags: ghcr.io/muhomorfus/ds-lab-04:${{ github.sha }}
+
+      - uses: azure/k8s-set-context@v1
+        name: Set K8s context
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - uses: azure/setup-kubectl@v4
+        name: Setup helm
+
+      - name: Deploy gateway
+        run: >
+          helm upgrade --install --create-namespace --namespace avknyazhev
+          --set 'image.tag=${{ github.sha }}'
+          -f services/gateway/deployments/helm/values.yaml
+          gateway helm
+
+      - name: Deploy library
+        run: >
+          helm upgrade --install --create-namespace --namespace avknyazhev
+          --set 'image.tag=${{ github.sha }}'
+          --set 'postgresql.password=${{ secrets.LIBRARY_PGPASSWORD }}'
+          -f services/library/deployments/helm/values.yaml
+          library helm
+
+      - name: Deploy rating
+        run: >
+          helm upgrade --install --create-namespace --namespace avknyazhev
+          --set 'image.tag=${{ github.sha }}'
+          --set 'postgresql.password=${{ secrets.RATING_PGPASSWORD }}'
+          -f services/rating/deployments/helm/values.yaml
+          rating helm
+
+      - name: Deploy reservation
+        run: >
+          helm upgrade --install --create-namespace --namespace avknyazhev
+          --set 'image.tag=${{ github.sha }}'
+          --set 'postgresql.password=${{ secrets.RESERVATION_PGPASSWORD }}'
+          -f services/reservation/deployments/helm/values.yaml
+          reservation helm
+
+  autograding:
     name: Autograding
+    needs: [ "deploy" ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -13,26 +133,14 @@ jobs:
 
       - uses: docker/setup-buildx-action@v2
 
-      # TODO build, publish to docker hub, deploy to k8s
-
       - name: Run API Tests
         uses: matt-ball/newman-action@master
         with:
-          collection: <variant>/postman/collection.json
-          environment: <variant>/postman/environment.json
+          collection: v4/postman/collection.json
+          environment: v4/postman/environment.json
           delayRequest: 100
           reporters: '[ "cli" ]'
 
       - uses: education/autograding@v1
         id: autograder
         continue-on-error: true
-
-      - name: Github auto grader mark
-        uses: Romanow/google-sheet-autograder-marker@v1.0
-        with:
-          google_token: ${{secrets.GOOGLE_API_KEY}}
-          sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
-          homework_number: 5
-          user_column: 'D'
-          column_offset: 'F'
-          mark: "'+"

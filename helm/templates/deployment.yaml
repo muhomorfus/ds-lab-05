@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "helm.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "helm.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: service
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          command:
+            - /opt/{{ .Values.name }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: {{ quote .Values.port }}
+            - name: PGHOST
+              value: {{ quote .Values.postgresql.host }}
+            - name: PGPORT
+              value: {{ quote .Values.postgresql.port }}
+            - name: PGUSER
+              value: {{ quote .Values.postgresql.user }}
+            - name: PGPASSWORD
+              value: {{ quote .Values.postgresql.password }}
+            - name: PGDB
+              value: {{ quote .Values.postgresql.db }}
+            - name: PGSSL
+              value: {{ quote .Values.postgresql.sslEnabled }}
+            - name: LIBRARY_ADDRESS
+              value: {{ quote .Values.services.library }}
+            - name: RATING_ADDRESS
+              value: {{ quote .Values.services.rating }}
+            - name: RESERVATION_ADDRESS
+              value: {{ quote .Values.services.reservation }}
