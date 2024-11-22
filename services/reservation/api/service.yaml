@@ -17,13 +17,6 @@ paths:
     get:
       summary: Получить информацию по всем взятым в прокат книгам пользователя
       operationId: list
-      parameters:
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           description: Информация по всем взятым в прокат книгам
@@ -37,13 +30,6 @@ paths:
     post:
       summary: Взять книгу в библиотеке
       operationId: Create
-      parameters:
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
       requestBody:
         content:
           application/json:
@@ -75,12 +61,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           description: Информация по бронированию
@@ -107,12 +87,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
       requestBody:
         content:
           application/json:
@@ -144,12 +118,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
       responses:
         "204":
           description: Бронирование отменено

@@ -6,11 +6,13 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
+	"github.com/muhomorfus/ds-lab-02/services/auth/jwt"
 	"github.com/muhomorfus/ds-lab-02/services/gateway/internal/clients/library"
 	"github.com/muhomorfus/ds-lab-02/services/gateway/internal/clients/rating"
 	"github.com/muhomorfus/ds-lab-02/services/gateway/internal/clients/reservation"
 	"github.com/muhomorfus/ds-lab-02/services/gateway/internal/generated"
 	"github.com/muhomorfus/ds-lab-02/services/gateway/internal/openapi"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -47,6 +49,10 @@ func run() error {
 
 	server := openapi.New(libraryClient, reservationClient, ratingClient)
 	router := echo.New()
+	router.Use(jwt.Middleware(cfg.JWKsURI))
+
+	slog.Info("using jwks uri", "uri", cfg.JWKsURI)
+
 	generated.RegisterHandlers(router, generated.NewStrictHandler(server, nil))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -74,6 +80,7 @@ type config struct {
 	RatingAddress      string `envconfig:"RATING_ADDRESS" required:"true"`
 	ReservationAddress string `envconfig:"RESERVATION_ADDRESS" required:"true"`
 	Port               string `envconfig:"PORT" required:"true"`
+	JWKsURI            string `envconfig:"JWKS_URI" required:"true"`
 }
 
 func (c config) listerAddress() string {

@@ -123,36 +123,6 @@ type ValidationErrorResponse struct {
 	Message string `json:"message"`
 }
 
-// ListParams defines parameters for List.
-type ListParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
-// CreateParams defines parameters for Create.
-type CreateParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
-// GetParams defines parameters for Get.
-type GetParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
-// CancelParams defines parameters for Cancel.
-type CancelParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
-// FinishParams defines parameters for Finish.
-type FinishParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
 // CreateJSONRequestBody defines body for Create for application/json ContentType.
 type CreateJSONRequestBody = TakeBookRequest
 
@@ -163,19 +133,19 @@ type FinishJSONRequestBody = FinishReservationRequest
 type ServerInterface interface {
 	// Получить информацию по всем взятым в прокат книгам пользователя
 	// (GET /api/v1/reservations)
-	List(ctx echo.Context, params ListParams) error
+	List(ctx echo.Context) error
 	// Взять книгу в библиотеке
 	// (POST /api/v1/reservations)
-	Create(ctx echo.Context, params CreateParams) error
+	Create(ctx echo.Context) error
 	// Получить информацию конкретно взятому бронированию
 	// (GET /api/v1/reservations/{reservationUid})
-	Get(ctx echo.Context, reservationUid openapi_types.UUID, params GetParams) error
+	Get(ctx echo.Context, reservationUid openapi_types.UUID) error
 	// Отменить бронирование
 	// (POST /api/v1/reservations/{reservationUid}/cancel)
-	Cancel(ctx echo.Context, reservationUid openapi_types.UUID, params CancelParams) error
+	Cancel(ctx echo.Context, reservationUid openapi_types.UUID) error
 	// Вернуть книгу
 	// (POST /api/v1/reservations/{reservationUid}/return)
-	Finish(ctx echo.Context, reservationUid openapi_types.UUID, params FinishParams) error
+	Finish(ctx echo.Context, reservationUid openapi_types.UUID) error
 	// Проверка живости сервиса
 	// (GET /manage/health)
 	Health(ctx echo.Context) error
@@ -190,30 +160,8 @@ type ServerInterfaceWrapper struct {
 func (w *ServerInterfaceWrapper) List(ctx echo.Context) error {
 	var err error
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params ListParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.List(ctx, params)
+	err = w.Handler.List(ctx)
 	return err
 }
 
@@ -221,30 +169,8 @@ func (w *ServerInterfaceWrapper) List(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) Create(ctx echo.Context) error {
 	var err error
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params CreateParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.Create(ctx, params)
+	err = w.Handler.Create(ctx)
 	return err
 }
 
@@ -259,30 +185,8 @@ func (w *ServerInterfaceWrapper) Get(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter reservationUid: %s", err))
 	}
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.Get(ctx, reservationUid, params)
+	err = w.Handler.Get(ctx, reservationUid)
 	return err
 }
 
@@ -297,30 +201,8 @@ func (w *ServerInterfaceWrapper) Cancel(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter reservationUid: %s", err))
 	}
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params CancelParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.Cancel(ctx, reservationUid, params)
+	err = w.Handler.Cancel(ctx, reservationUid)
 	return err
 }
 
@@ -335,30 +217,8 @@ func (w *ServerInterfaceWrapper) Finish(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter reservationUid: %s", err))
 	}
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params FinishParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.Finish(ctx, reservationUid, params)
+	err = w.Handler.Finish(ctx, reservationUid)
 	return err
 }
 
@@ -409,7 +269,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 }
 
 type ListRequestObject struct {
-	Params ListParams
 }
 
 type ListResponseObject interface {
@@ -426,8 +285,7 @@ func (response List200JSONResponse) VisitListResponse(w http.ResponseWriter) err
 }
 
 type CreateRequestObject struct {
-	Params CreateParams
-	Body   *CreateJSONRequestBody
+	Body *CreateJSONRequestBody
 }
 
 type CreateResponseObject interface {
@@ -454,7 +312,6 @@ func (response Create400JSONResponse) VisitCreateResponse(w http.ResponseWriter)
 
 type GetRequestObject struct {
 	ReservationUid openapi_types.UUID `json:"reservationUid"`
-	Params         GetParams
 }
 
 type GetResponseObject interface {
@@ -481,7 +338,6 @@ func (response Get404JSONResponse) VisitGetResponse(w http.ResponseWriter) error
 
 type CancelRequestObject struct {
 	ReservationUid openapi_types.UUID `json:"reservationUid"`
-	Params         CancelParams
 }
 
 type CancelResponseObject interface {
@@ -498,7 +354,6 @@ func (response Cancel204Response) VisitCancelResponse(w http.ResponseWriter) err
 
 type FinishRequestObject struct {
 	ReservationUid openapi_types.UUID `json:"reservationUid"`
-	Params         FinishParams
 	Body           *FinishJSONRequestBody
 }
 
@@ -574,10 +429,8 @@ type strictHandler struct {
 }
 
 // List operation middleware
-func (sh *strictHandler) List(ctx echo.Context, params ListParams) error {
+func (sh *strictHandler) List(ctx echo.Context) error {
 	var request ListRequestObject
-
-	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.List(ctx.Request().Context(), request.(ListRequestObject))
@@ -599,10 +452,8 @@ func (sh *strictHandler) List(ctx echo.Context, params ListParams) error {
 }
 
 // Create operation middleware
-func (sh *strictHandler) Create(ctx echo.Context, params CreateParams) error {
+func (sh *strictHandler) Create(ctx echo.Context) error {
 	var request CreateRequestObject
-
-	request.Params = params
 
 	var body CreateJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
@@ -630,11 +481,10 @@ func (sh *strictHandler) Create(ctx echo.Context, params CreateParams) error {
 }
 
 // Get operation middleware
-func (sh *strictHandler) Get(ctx echo.Context, reservationUid openapi_types.UUID, params GetParams) error {
+func (sh *strictHandler) Get(ctx echo.Context, reservationUid openapi_types.UUID) error {
 	var request GetRequestObject
 
 	request.ReservationUid = reservationUid
-	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.Get(ctx.Request().Context(), request.(GetRequestObject))
@@ -656,11 +506,10 @@ func (sh *strictHandler) Get(ctx echo.Context, reservationUid openapi_types.UUID
 }
 
 // Cancel operation middleware
-func (sh *strictHandler) Cancel(ctx echo.Context, reservationUid openapi_types.UUID, params CancelParams) error {
+func (sh *strictHandler) Cancel(ctx echo.Context, reservationUid openapi_types.UUID) error {
 	var request CancelRequestObject
 
 	request.ReservationUid = reservationUid
-	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.Cancel(ctx.Request().Context(), request.(CancelRequestObject))
@@ -682,11 +531,10 @@ func (sh *strictHandler) Cancel(ctx echo.Context, reservationUid openapi_types.U
 }
 
 // Finish operation middleware
-func (sh *strictHandler) Finish(ctx echo.Context, reservationUid openapi_types.UUID, params FinishParams) error {
+func (sh *strictHandler) Finish(ctx echo.Context, reservationUid openapi_types.UUID) error {
 	var request FinishRequestObject
 
 	request.ReservationUid = reservationUid
-	request.Params = params
 
 	var body FinishJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {

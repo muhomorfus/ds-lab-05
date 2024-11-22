@@ -7,6 +7,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
+	"github.com/muhomorfus/ds-lab-02/services/auth/jwt"
 	"github.com/muhomorfus/ds-lab-02/services/library/deployments/migrations"
 	"github.com/muhomorfus/ds-lab-02/services/library/internal/generated"
 	"github.com/muhomorfus/ds-lab-02/services/library/internal/openapi"
@@ -39,6 +40,7 @@ func run() error {
 
 	server := openapi.New(db)
 	router := echo.New()
+	router.Use(jwt.Middleware(cfg.JWKsURI))
 	generated.RegisterHandlers(router, generated.NewStrictHandler(server, nil))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -66,6 +68,7 @@ type config struct {
 	PostgresDB       string `envconfig:"PGDB" required:"true"`
 	PostgresSSL      bool   `envconfig:"PGSSL" default:"false"`
 	Port             string `envconfig:"PORT" required:"true"`
+	JWKsURI          string `envconfig:"JWKS_URI" required:"true"`
 }
 
 func (c config) dsn() string {

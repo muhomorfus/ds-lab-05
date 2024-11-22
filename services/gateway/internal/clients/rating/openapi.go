@@ -21,18 +21,9 @@ type Rating struct {
 	Stars int `json:"stars"`
 }
 
-// GetParams defines parameters for Get.
-type GetParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
 // SaveViolationsParams defines parameters for SaveViolations.
 type SaveViolationsParams struct {
 	Count int `form:"count" json:"count"`
-
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
 }
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
@@ -109,7 +100,7 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 	// Get request
-	Get(ctx context.Context, params *GetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	Get(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// SaveViolations request
 	SaveViolations(ctx context.Context, params *SaveViolationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -118,8 +109,8 @@ type ClientInterface interface {
 	Health(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) Get(ctx context.Context, params *GetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetRequest(c.Server, params)
+func (c *Client) Get(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +146,7 @@ func (c *Client) Health(ctx context.Context, reqEditors ...RequestEditorFn) (*ht
 }
 
 // NewGetRequest generates requests for Get
-func NewGetRequest(server string, params *GetParams) (*http.Request, error) {
+func NewGetRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -176,19 +167,6 @@ func NewGetRequest(server string, params *GetParams) (*http.Request, error) {
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
-	}
-
-	if params != nil {
-
-		var headerParam0 string
-
-		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-User-Name", runtime.ParamLocationHeader, params.XUserName)
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("X-User-Name", headerParam0)
-
 	}
 
 	return req, nil
@@ -234,19 +212,6 @@ func NewSaveViolationsRequest(server string, params *SaveViolationsParams) (*htt
 	req, err := http.NewRequest("POST", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
-	}
-
-	if params != nil {
-
-		var headerParam0 string
-
-		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-User-Name", runtime.ParamLocationHeader, params.XUserName)
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("X-User-Name", headerParam0)
-
 	}
 
 	return req, nil
@@ -323,7 +288,7 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 	// GetWithResponse request
-	GetWithResponse(ctx context.Context, params *GetParams, reqEditors ...RequestEditorFn) (*GetResponse, error)
+	GetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetResponse, error)
 
 	// SaveViolationsWithResponse request
 	SaveViolationsWithResponse(ctx context.Context, params *SaveViolationsParams, reqEditors ...RequestEditorFn) (*SaveViolationsResponse, error)
@@ -397,8 +362,8 @@ func (r HealthResponse) StatusCode() int {
 }
 
 // GetWithResponse request returning *GetResponse
-func (c *ClientWithResponses) GetWithResponse(ctx context.Context, params *GetParams, reqEditors ...RequestEditorFn) (*GetResponse, error) {
-	rsp, err := c.Get(ctx, params, reqEditors...)
+func (c *ClientWithResponses) GetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetResponse, error) {
+	rsp, err := c.Get(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

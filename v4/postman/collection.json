@@ -59,25 +59,21 @@
 									"type": "text"
 								},
 								{
-									"key": "clientId",
+									"key": "client_id",
 									"value": "{{clientId}}",
 									"type": "text"
 								},
 								{
-									"key": "clientSecret",
+									"key": "client_secret",
 									"value": "{{clientSecret}}",
 									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{identityProviderUrl}}/oauth/token",
+							"raw": "{{identityProviderUrl}}",
 							"host": [
 								"{{identityProviderUrl}}"
-							],
-							"path": [
-								"oauth",
-								"token"
 							]
 						}
 					},
@@ -495,7 +491,7 @@
 									"    const request = JSON.parse(pm.request.body.raw)",
 									"",
 									"    pm.expect(response.status).to.be.eq(\"RENTED\")",
-									"    pm.expect(response.startDate).to.be.eq(moment().format(\"YYYY-MM-DD\"))",
+									"    pm.expect(response.startDate).to.be.eq(moment.utc().format(\"YYYY-MM-DD\"))",
 									"    pm.expect(response.tillDate).to.be.eq(request.tillDate)",
 									"",
 									"    pm.expect(response.book).to.be.not.undefined",

@@ -17,13 +17,6 @@ paths:
     get:
       summary: Получить информацию по рейтингу пользователя
       operationId: get
-      parameters:
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           description: Информация рейтингу пользователя
@@ -37,12 +30,6 @@ paths:
       summary: Опустить или поднять рейтинг пользователя в зависимости от нарушений
       operationId: saveViolations
       parameters:
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
         - name: count
           in: query
           required: true

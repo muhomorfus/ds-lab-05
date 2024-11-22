@@ -236,30 +236,6 @@ type ListBooksParams struct {
 	ShowAll *bool `form:"showAll,omitempty" json:"showAll,omitempty"`
 }
 
-// GetRatingParams defines parameters for GetRating.
-type GetRatingParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
-// ListReservationsParams defines parameters for ListReservations.
-type ListReservationsParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
-// TakeBookParams defines parameters for TakeBook.
-type TakeBookParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
-// ReturnBookParams defines parameters for ReturnBook.
-type ReturnBookParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
 // TakeBookJSONRequestBody defines body for TakeBook for application/json ContentType.
 type TakeBookJSONRequestBody = TakeBookRequest
 
@@ -276,16 +252,16 @@ type ServerInterface interface {
 	ListBooks(ctx echo.Context, libraryUid openapi_types.UUID, params ListBooksParams) error
 	// Получить рейтинг пользователя
 	// (GET /api/v1/rating)
-	GetRating(ctx echo.Context, params GetRatingParams) error
+	GetRating(ctx echo.Context) error
 	// Получить информацию по всем взятым в прокат книгам пользователя
 	// (GET /api/v1/reservations)
-	ListReservations(ctx echo.Context, params ListReservationsParams) error
+	ListReservations(ctx echo.Context) error
 	// Взять книгу в библиотеке
 	// (POST /api/v1/reservations)
-	TakeBook(ctx echo.Context, params TakeBookParams) error
+	TakeBook(ctx echo.Context) error
 	// Вернуть книгу
 	// (POST /api/v1/reservations/{reservationUid}/return)
-	ReturnBook(ctx echo.Context, reservationUid openapi_types.UUID, params ReturnBookParams) error
+	ReturnBook(ctx echo.Context, reservationUid openapi_types.UUID) error
 	// Проверка живости сервиса
 	// (GET /manage/health)
 	Health(ctx echo.Context) error
@@ -371,30 +347,8 @@ func (w *ServerInterfaceWrapper) ListBooks(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetRating(ctx echo.Context) error {
 	var err error
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetRatingParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetRating(ctx, params)
+	err = w.Handler.GetRating(ctx)
 	return err
 }
 
@@ -402,30 +356,8 @@ func (w *ServerInterfaceWrapper) GetRating(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) ListReservations(ctx echo.Context) error {
 	var err error
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params ListReservationsParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.ListReservations(ctx, params)
+	err = w.Handler.ListReservations(ctx)
 	return err
 }
 
@@ -433,30 +365,8 @@ func (w *ServerInterfaceWrapper) ListReservations(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) TakeBook(ctx echo.Context) error {
 	var err error
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params TakeBookParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.TakeBook(ctx, params)
+	err = w.Handler.TakeBook(ctx)
 	return err
 }
 
@@ -471,30 +381,8 @@ func (w *ServerInterfaceWrapper) ReturnBook(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter reservationUid: %s", err))
 	}
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params ReturnBookParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.ReturnBook(ctx, reservationUid, params)
+	err = w.Handler.ReturnBook(ctx, reservationUid)
 	return err
 }
 
@@ -581,7 +469,6 @@ func (response ListBooks200JSONResponse) VisitListBooksResponse(w http.ResponseW
 }
 
 type GetRatingRequestObject struct {
-	Params GetRatingParams
 }
 
 type GetRatingResponseObject interface {
@@ -598,7 +485,6 @@ func (response GetRating200JSONResponse) VisitGetRatingResponse(w http.ResponseW
 }
 
 type ListReservationsRequestObject struct {
-	Params ListReservationsParams
 }
 
 type ListReservationsResponseObject interface {
@@ -615,8 +501,7 @@ func (response ListReservations200JSONResponse) VisitListReservationsResponse(w 
 }
 
 type TakeBookRequestObject struct {
-	Params TakeBookParams
-	Body   *TakeBookJSONRequestBody
+	Body *TakeBookJSONRequestBody
 }
 
 type TakeBookResponseObject interface {
@@ -643,7 +528,6 @@ func (response TakeBook400JSONResponse) VisitTakeBookResponse(w http.ResponseWri
 
 type ReturnBookRequestObject struct {
 	ReservationUid openapi_types.UUID `json:"reservationUid"`
-	Params         ReturnBookParams
 	Body           *ReturnBookJSONRequestBody
 }
 
@@ -772,10 +656,8 @@ func (sh *strictHandler) ListBooks(ctx echo.Context, libraryUid openapi_types.UU
 }
 
 // GetRating operation middleware
-func (sh *strictHandler) GetRating(ctx echo.Context, params GetRatingParams) error {
+func (sh *strictHandler) GetRating(ctx echo.Context) error {
 	var request GetRatingRequestObject
-
-	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.GetRating(ctx.Request().Context(), request.(GetRatingRequestObject))
@@ -797,10 +679,8 @@ func (sh *strictHandler) GetRating(ctx echo.Context, params GetRatingParams) err
 }
 
 // ListReservations operation middleware
-func (sh *strictHandler) ListReservations(ctx echo.Context, params ListReservationsParams) error {
+func (sh *strictHandler) ListReservations(ctx echo.Context) error {
 	var request ListReservationsRequestObject
-
-	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.ListReservations(ctx.Request().Context(), request.(ListReservationsRequestObject))
@@ -822,10 +702,8 @@ func (sh *strictHandler) ListReservations(ctx echo.Context, params ListReservati
 }
 
 // TakeBook operation middleware
-func (sh *strictHandler) TakeBook(ctx echo.Context, params TakeBookParams) error {
+func (sh *strictHandler) TakeBook(ctx echo.Context) error {
 	var request TakeBookRequestObject
-
-	request.Params = params
 
 	var body TakeBookJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
@@ -853,11 +731,10 @@ func (sh *strictHandler) TakeBook(ctx echo.Context, params TakeBookParams) error
 }
 
 // ReturnBook operation middleware
-func (sh *strictHandler) ReturnBook(ctx echo.Context, reservationUid openapi_types.UUID, params ReturnBookParams) error {
+func (sh *strictHandler) ReturnBook(ctx echo.Context, reservationUid openapi_types.UUID) error {
 	var request ReturnBookRequestObject
 
 	request.ReservationUid = reservationUid
-	request.Params = params
 
 	var body ReturnBookJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {

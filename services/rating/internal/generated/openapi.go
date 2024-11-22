@@ -20,25 +20,16 @@ type Rating struct {
 	Stars int `json:"stars"`
 }
 
-// GetParams defines parameters for Get.
-type GetParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
 // SaveViolationsParams defines parameters for SaveViolations.
 type SaveViolationsParams struct {
 	Count int `form:"count" json:"count"`
-
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
 }
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Получить информацию по рейтингу пользователя
 	// (GET /api/v1/rating)
-	Get(ctx echo.Context, params GetParams) error
+	Get(ctx echo.Context) error
 	// Опустить или поднять рейтинг пользователя в зависимости от нарушений
 	// (POST /api/v1/rating/violation)
 	SaveViolations(ctx echo.Context, params SaveViolationsParams) error
@@ -56,30 +47,8 @@ type ServerInterfaceWrapper struct {
 func (w *ServerInterfaceWrapper) Get(ctx echo.Context) error {
 	var err error
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetParams
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.Get(ctx, params)
+	err = w.Handler.Get(ctx)
 	return err
 }
 
@@ -94,25 +63,6 @@ func (w *ServerInterfaceWrapper) SaveViolations(ctx echo.Context) error {
 	err = runtime.BindQueryParameter("form", true, true, "count", ctx.QueryParams(), &params.Count)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter count: %s", err))
-	}
-
-	headers := ctx.Request().Header
-	// ------------- Required header parameter "X-User-Name" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-User-Name")]; found {
-		var XUserName string
-		n := len(valueList)
-		if n != 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for X-User-Name, got %d", n))
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-User-Name", valueList[0], &XUserName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter X-User-Name: %s", err))
-		}
-
-		params.XUserName = XUserName
-	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter X-User-Name is required, but not found"))
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
@@ -164,7 +114,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 }
 
 type GetRequestObject struct {
-	Params GetParams
 }
 
 type GetResponseObject interface {
@@ -237,10 +186,8 @@ type strictHandler struct {
 }
 
 // Get operation middleware
-func (sh *strictHandler) Get(ctx echo.Context, params GetParams) error {
+func (sh *strictHandler) Get(ctx echo.Context) error {
 	var request GetRequestObject
-
-	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.Get(ctx.Request().Context(), request.(GetRequestObject))

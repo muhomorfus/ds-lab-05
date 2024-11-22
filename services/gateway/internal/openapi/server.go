@@ -3,6 +3,7 @@ package openapi
 import (
 	"context"
 	"fmt"
+	"github.com/muhomorfus/ds-lab-02/services/auth/contextutils"
 	"github.com/muhomorfus/ds-lab-02/services/gateway/internal/clients/library"
 	"github.com/muhomorfus/ds-lab-02/services/gateway/internal/clients/rating"
 	"github.com/muhomorfus/ds-lab-02/services/gateway/internal/clients/reservation"
@@ -29,7 +30,7 @@ func (s *Server) ListLibraries(ctx context.Context, request generated.ListLibrar
 		Page: request.Params.Page,
 		Size: request.Params.Size,
 		City: request.Params.City,
-	})
+	}, s.token(ctx))
 	if err != nil {
 		logger.Error("list libraries", "error", err)
 		return nil, fmt.Errorf("list libraries: %w", err)
@@ -57,7 +58,7 @@ func (s *Server) ListBooks(ctx context.Context, request generated.ListBooksReque
 		Page:    request.Params.Page,
 		Size:    request.Params.Size,
 		ShowAll: request.Params.ShowAll,
-	})
+	}, s.token(ctx))
 	if err != nil {
 		logger.Error("list books", "error", err)
 		return nil, fmt.Errorf("list books: %w", err)
@@ -88,7 +89,7 @@ func (s *Server) ListBooks(ctx context.Context, request generated.ListBooksReque
 func (s *Server) GetRating(ctx context.Context, request generated.GetRatingRequestObject) (generated.GetRatingResponseObject, error) {
 	logger := slog.With("handler", "GetRating")
 
-	resp, err := s.rating.GetWithResponse(ctx, &rating.GetParams{XUserName: request.Params.XUserName})
+	resp, err := s.rating.GetWithResponse(ctx, s.token(ctx))
 	if err != nil {
 		logger.Error("get rating", "error", err)
 		return nil, fmt.Errorf("get rating: %w", err)
@@ -107,7 +108,7 @@ func (s *Server) GetRating(ctx context.Context, request generated.GetRatingReque
 func (s *Server) ListReservations(ctx context.Context, request generated.ListReservationsRequestObject) (generated.ListReservationsResponseObject, error) {
 	logger := slog.With("handler", "ListReservations")
 
-	resp, err := s.reservation.ListWithResponse(ctx, &reservation.ListParams{XUserName: request.Params.XUserName})
+	resp, err := s.reservation.ListWithResponse(ctx, s.token(ctx))
 	if err != nil {
 		logger.Error("list reservations", "error", err)
 		return nil, fmt.Errorf("list reservations: %w", err)
@@ -124,7 +125,7 @@ func (s *Server) ListReservations(ctx context.Context, request generated.ListRes
 			BookUid: r.BookUid,
 		}
 
-		bookResp, err := s.library.GetBookWithResponse(ctx, r.BookUid)
+		bookResp, err := s.library.GetBookWithResponse(ctx, r.BookUid, s.token(ctx))
 		if err == nil && bookResp.JSON200 != nil {
 			book = generated.BookInfo{
 				Author:  bookResp.JSON200.Author,
@@ -138,7 +139,7 @@ func (s *Server) ListReservations(ctx context.Context, request generated.ListRes
 			LibraryUid: r.LibraryUid,
 		}
 
-		libraryResp, err := s.library.GetLibraryWithResponse(ctx, r.LibraryUid)
+		libraryResp, err := s.library.GetLibraryWithResponse(ctx, r.LibraryUid, s.token(ctx))
 		if err == nil && libraryResp.JSON200 != nil {
 			lib = generated.LibraryResponse{
 				Address:    libraryResp.JSON200.Address,
@@ -164,7 +165,7 @@ func (s *Server) ListReservations(ctx context.Context, request generated.ListRes
 func (s *Server) TakeBook(ctx context.Context, request generated.TakeBookRequestObject) (generated.TakeBookResponseObject, error) {
 	logger := slog.With("handler", "TakeBook")
 
-	reservationResp, err := s.reservation.ListWithResponse(ctx, &reservation.ListParams{XUserName: request.Params.XUserName})
+	reservationResp, err := s.reservation.ListWithResponse(ctx, s.token(ctx))
 	if err != nil {
 		logger.Error("get user reservation", "error", err)
 		return nil, fmt.Errorf("get user reservation: %w", err)
@@ -183,7 +184,7 @@ func (s *Server) TakeBook(ctx context.Context, request generated.TakeBookRequest
 		return agg
 	}, 0)
 
-	ratingResp, err := s.rating.GetWithResponse(ctx, &rating.GetParams{XUserName: request.Params.XUserName})
+	ratingResp, err := s.rating.GetWithResponse(ctx, s.token(ctx))
 	if err != nil {
 		logger.Error("get user rating", "error", err)
 		return nil, fmt.Errorf("get user rating: %w", err)
@@ -201,13 +202,11 @@ func (s *Server) TakeBook(ctx context.Context, request generated.TakeBookRequest
 		}, nil
 	}
 
-	reservedResp, err := s.reservation.CreateWithResponse(ctx, &reservation.CreateParams{
-		XUserName: request.Params.XUserName,
-	}, reservation.CreateJSONRequestBody{
+	reservedResp, err := s.reservation.CreateWithResponse(ctx, reservation.CreateJSONRequestBody{
 		BookUid:    request.Body.BookUid,
 		LibraryUid: request.Body.LibraryUid,
 		TillDate:   request.Body.TillDate,
-	})
+	}, s.token(ctx))
 	if err != nil {
 		logger.Error("reserve book", "error", err)
 		return nil, fmt.Errorf("reserve book: %w", err)
@@ -224,7 +223,7 @@ func (s *Server) TakeBook(ctx context.Context, request generated.TakeBookRequest
 		return nil, fmt.Errorf("reserve book: %s", string(reservedResp.Body))
 	}
 
-	bookResp, err := s.library.TakeBookWithResponse(ctx, request.Body.LibraryUid, request.Body.BookUid)
+	bookResp, err := s.library.TakeBookWithResponse(ctx, request.Body.LibraryUid, request.Body.BookUid, s.token(ctx))
 	if err != nil {
 		logger.Error("take book", "error", err)
 		return nil, fmt.Errorf("decrease book: %w", err)
@@ -245,7 +244,7 @@ func (s *Server) TakeBook(ctx context.Context, request generated.TakeBookRequest
 		BookUid: reservedResp.JSON200.BookUid,
 	}
 
-	bookRespInfo, err := s.library.GetBookWithResponse(ctx, reservedResp.JSON200.BookUid)
+	bookRespInfo, err := s.library.GetBookWithResponse(ctx, reservedResp.JSON200.BookUid, s.token(ctx))
 	if err == nil && bookRespInfo.JSON200 != nil {
 		book = generated.BookInfo{
 			Author:  bookRespInfo.JSON200.Author,
@@ -259,7 +258,7 @@ func (s *Server) TakeBook(ctx context.Context, request generated.TakeBookRequest
 		LibraryUid: reservedResp.JSON200.LibraryUid,
 	}
 
-	libraryResp, err := s.library.GetLibraryWithResponse(ctx, reservedResp.JSON200.LibraryUid)
+	libraryResp, err := s.library.GetLibraryWithResponse(ctx, reservedResp.JSON200.LibraryUid, s.token(ctx))
 	if err == nil && libraryResp.JSON200 != nil {
 		lib = generated.LibraryResponse{
 			Address:    libraryResp.JSON200.Address,
@@ -285,7 +284,7 @@ func (s *Server) TakeBook(ctx context.Context, request generated.TakeBookRequest
 func (s *Server) ReturnBook(ctx context.Context, request generated.ReturnBookRequestObject) (generated.ReturnBookResponseObject, error) {
 	logger := slog.With("handler", "ReturnBook")
 
-	reservationResp, err := s.reservation.GetWithResponse(ctx, request.ReservationUid, &reservation.GetParams{XUserName: request.Params.XUserName})
+	reservationResp, err := s.reservation.GetWithResponse(ctx, request.ReservationUid, s.token(ctx))
 	if err != nil {
 		logger.Error("get user reservation", "error", err)
 		return nil, fmt.Errorf("get user reservation: %w", err)
@@ -298,7 +297,7 @@ func (s *Server) ReturnBook(ctx context.Context, request generated.ReturnBookReq
 
 	violations := 0
 
-	unreservedResp, err := s.reservation.FinishWithResponse(ctx, request.ReservationUid, &reservation.FinishParams{XUserName: request.Params.XUserName}, reservation.FinishJSONRequestBody{Date: request.Body.Date})
+	unreservedResp, err := s.reservation.FinishWithResponse(ctx, request.ReservationUid, reservation.FinishJSONRequestBody{Date: request.Body.Date}, s.token(ctx))
 	if err != nil {
 		logger.Error("finish reservation", "error", err)
 		return nil, fmt.Errorf("finish reservation: %w", err)
@@ -321,7 +320,7 @@ func (s *Server) ReturnBook(ctx context.Context, request generated.ReturnBookReq
 
 	makeAvailableResp, err := s.library.ReturnBookWithResponse(ctx, reservationResp.JSON200.LibraryUid, reservationResp.JSON200.BookUid, library.ReturnBookJSONRequestBody{
 		Condition: library.ReturnBookRequestCondition(request.Body.Condition),
-	})
+	}, s.token(ctx))
 	if err != nil {
 		logger.Error("return book", "error", err)
 		return nil, fmt.Errorf("return book: %w", err)
@@ -336,7 +335,7 @@ func (s *Server) ReturnBook(ctx context.Context, request generated.ReturnBookReq
 		violations++
 	}
 
-	changeRatingResp, err := s.rating.SaveViolationsWithResponse(ctx, &rating.SaveViolationsParams{XUserName: request.Params.XUserName, Count: violations})
+	changeRatingResp, err := s.rating.SaveViolationsWithResponse(ctx, &rating.SaveViolationsParams{Count: violations}, s.token(ctx))
 	if err != nil {
 		logger.Error("save violations", "error", err)
 		return nil, fmt.Errorf("save violations: %w", err)
@@ -352,4 +351,14 @@ func (s *Server) ReturnBook(ctx context.Context, request generated.ReturnBookReq
 
 func (s *Server) Health(ctx context.Context, request generated.HealthRequestObject) (generated.HealthResponseObject, error) {
 	return generated.Health200Response{}, nil
+}
+
+func (s *Server) token(ctx context.Context) func(ctx context.Context, req *http.Request) error {
+	token := contextutils.GetToken(ctx)
+
+	return func(ctx context.Context, req *http.Request) error {
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		return nil
+	}
 }

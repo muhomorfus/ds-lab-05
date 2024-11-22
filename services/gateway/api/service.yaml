@@ -93,13 +93,6 @@ paths:
       operationId: listReservations
       tags:
         - Gateway API
-      parameters:
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           description: Информация по всем взятым в прокат книгам
@@ -115,13 +108,6 @@ paths:
       operationId: takeBook
       tags:
         - Gateway API
-      parameters:
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
       requestBody:
         content:
           application/json:
@@ -155,12 +141,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
       requestBody:
         content:
           application/json:
@@ -182,13 +162,6 @@ paths:
       operationId: getRating
       tags:
         - Gateway API
-      parameters:
-        - name: X-User-Name
-          in: header
-          description: Имя пользователя
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           description: Рейтинг пользователя

@@ -3,6 +3,8 @@ module github.com/muhomorfus/ds-lab-02/services
 go 1.23.2
 
 require (
+	github.com/MicahParks/keyfunc v1.9.0
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -14,15 +16,12 @@ require (
 )
 
 require (
-	github.com/RohanPoojary/gomq v1.0.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
-	github.com/cenk/backoff v2.2.1+incompatible // indirect
-	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
-	github.com/rubyist/circuitbreaker v2.2.1+incompatible // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect

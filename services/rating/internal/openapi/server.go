@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/muhomorfus/ds-lab-02/services/auth/contextutils"
 	"github.com/muhomorfus/ds-lab-02/services/rating/internal/generated"
 	"log/slog"
 )
@@ -22,7 +23,7 @@ func (s *Server) Health(ctx context.Context, request generated.HealthRequestObje
 
 func (s *Server) Get(ctx context.Context, request generated.GetRequestObject) (generated.GetResponseObject, error) {
 	logger := slog.With("handler", "Get")
-	stars, err := s.get(ctx, request.Params.XUserName)
+	stars, err := s.get(ctx, contextutils.GetUser(ctx))
 	if err != nil {
 		logger.Error("get user rating", "error", err)
 		return nil, fmt.Errorf("get user rating: %w", err)
@@ -36,7 +37,7 @@ func (s *Server) Get(ctx context.Context, request generated.GetRequestObject) (g
 func (s *Server) SaveViolations(ctx context.Context, request generated.SaveViolationsRequestObject) (generated.SaveViolationsResponseObject, error) {
 	logger := slog.With("handler", "SaveViolations")
 
-	stars, err := s.get(ctx, request.Params.XUserName)
+	stars, err := s.get(ctx, contextutils.GetUser(ctx))
 	if err != nil {
 		logger.Error("get user rating", "error", err)
 		return nil, fmt.Errorf("get user rating: %w", err)
@@ -48,7 +49,7 @@ func (s *Server) SaveViolations(ctx context.Context, request generated.SaveViola
 		stars++
 	}
 
-	if err := s.save(ctx, request.Params.XUserName, stars); err != nil {
+	if err := s.save(ctx, contextutils.GetUser(ctx), stars); err != nil {
 		logger.Error("save user rating", "error", err)
 		return nil, fmt.Errorf("save user rating: %w", err)
 	}

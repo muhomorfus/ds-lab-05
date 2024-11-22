@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/muhomorfus/ds-lab-02/services/auth/contextutils"
 	"github.com/muhomorfus/ds-lab-02/services/reservation/internal/generated"
 	"github.com/samber/lo"
 	"log/slog"
@@ -27,7 +28,7 @@ func (s *Server) Cancel(ctx context.Context, request generated.CancelRequestObje
 	logger := slog.With("handler", "Get")
 	query := `delete from reservation where username = $1 and reservation_uid = $2`
 
-	if _, err := s.db.ExecContext(ctx, query, request.Params.XUserName, request.ReservationUid); err != nil {
+	if _, err := s.db.ExecContext(ctx, query, contextutils.GetUser(ctx), request.ReservationUid); err != nil {
 		logger.Error("delete reservation from db", "error", err)
 		return nil, fmt.Errorf("delete reservtion from db: %w", err)
 	}
@@ -40,7 +41,7 @@ func (s *Server) Get(ctx context.Context, request generated.GetRequestObject) (g
 	query := `select * from reservation where username = $1 and reservation_uid = $2`
 
 	var reservations []reservation
-	if err := s.db.SelectContext(ctx, &reservations, query, request.Params.XUserName, request.ReservationUid); err != nil {
+	if err := s.db.SelectContext(ctx, &reservations, query, contextutils.GetUser(ctx), request.ReservationUid); err != nil {
 		logger.Error("select reservation from db", "error", err)
 		return nil, fmt.Errorf("select reservtion from db: %w", err)
 	}
@@ -67,7 +68,7 @@ func (s *Server) List(ctx context.Context, request generated.ListRequestObject) 
 	query := `select * from reservation where username = $1`
 
 	var reservations []reservation
-	if err := s.db.SelectContext(ctx, &reservations, query, request.Params.XUserName); err != nil {
+	if err := s.db.SelectContext(ctx, &reservations, query, contextutils.GetUser(ctx)); err != nil {
 		logger.Error("select reservations from db", "error", err)
 		return nil, fmt.Errorf("select reservtions from db: %w", err)
 	}
@@ -104,7 +105,7 @@ func (s *Server) Create(ctx context.Context, request generated.CreateRequestObje
 		StartDate:      now,
 		Status:         rented,
 		TillDate:       till,
-		Username:       request.Params.XUserName,
+		Username:       contextutils.GetUser(ctx),
 	}
 
 	query := `insert into reservation 
@@ -132,7 +133,7 @@ func (s *Server) Finish(ctx context.Context, request generated.FinishRequestObje
 	query := `select * from reservation where reservation_uid = $1 and username = $2`
 
 	var reservations []reservation
-	if err := s.db.SelectContext(ctx, &reservations, query, request.ReservationUid, request.Params.XUserName); err != nil {
+	if err := s.db.SelectContext(ctx, &reservations, query, request.ReservationUid, contextutils.GetUser(ctx)); err != nil {
 		logger.Error("select reservations from db", "error", err)
 		return nil, fmt.Errorf("select reservtions from db: %w", err)
 	}

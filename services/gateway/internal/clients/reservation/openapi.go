@@ -125,30 +125,6 @@ type ValidationErrorResponse struct {
 	Message string `json:"message"`
 }
 
-// ListParams defines parameters for List.
-type ListParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
-// CreateParams defines parameters for Create.
-type CreateParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
-// GetParams defines parameters for Get.
-type GetParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
-// FinishParams defines parameters for Finish.
-type FinishParams struct {
-	// XUserName Имя пользователя
-	XUserName string `json:"X-User-Name"`
-}
-
 // CreateJSONRequestBody defines body for Create for application/json ContentType.
 type CreateJSONRequestBody = TakeBookRequest
 
@@ -229,27 +205,30 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 	// List request
-	List(ctx context.Context, params *ListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	List(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateWithBody request with any body
-	CreateWithBody(ctx context.Context, params *CreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	CreateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	Create(ctx context.Context, params *CreateParams, body CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	Create(ctx context.Context, body CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// Get request
-	Get(ctx context.Context, reservationUid openapi_types.UUID, params *GetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	Get(ctx context.Context, reservationUid openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// Cancel request
+	Cancel(ctx context.Context, reservationUid openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// FinishWithBody request with any body
-	FinishWithBody(ctx context.Context, reservationUid openapi_types.UUID, params *FinishParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	FinishWithBody(ctx context.Context, reservationUid openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	Finish(ctx context.Context, reservationUid openapi_types.UUID, params *FinishParams, body FinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	Finish(ctx context.Context, reservationUid openapi_types.UUID, body FinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// Health request
 	Health(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) List(ctx context.Context, params *ListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewListRequest(c.Server, params)
+func (c *Client) List(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -260,8 +239,8 @@ func (c *Client) List(ctx context.Context, params *ListParams, reqEditors ...Req
 	return c.Client.Do(req)
 }
 
-func (c *Client) CreateWithBody(ctx context.Context, params *CreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateRequestWithBody(c.Server, params, contentType, body)
+func (c *Client) CreateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -272,8 +251,8 @@ func (c *Client) CreateWithBody(ctx context.Context, params *CreateParams, conte
 	return c.Client.Do(req)
 }
 
-func (c *Client) Create(ctx context.Context, params *CreateParams, body CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateRequest(c.Server, params, body)
+func (c *Client) Create(ctx context.Context, body CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -284,8 +263,8 @@ func (c *Client) Create(ctx context.Context, params *CreateParams, body CreateJS
 	return c.Client.Do(req)
 }
 
-func (c *Client) Get(ctx context.Context, reservationUid openapi_types.UUID, params *GetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetRequest(c.Server, reservationUid, params)
+func (c *Client) Get(ctx context.Context, reservationUid openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRequest(c.Server, reservationUid)
 	if err != nil {
 		return nil, err
 	}
@@ -296,8 +275,8 @@ func (c *Client) Get(ctx context.Context, reservationUid openapi_types.UUID, par
 	return c.Client.Do(req)
 }
 
-func (c *Client) FinishWithBody(ctx context.Context, reservationUid openapi_types.UUID, params *FinishParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewFinishRequestWithBody(c.Server, reservationUid, params, contentType, body)
+func (c *Client) Cancel(ctx context.Context, reservationUid openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCancelRequest(c.Server, reservationUid)
 	if err != nil {
 		return nil, err
 	}
@@ -308,8 +287,20 @@ func (c *Client) FinishWithBody(ctx context.Context, reservationUid openapi_type
 	return c.Client.Do(req)
 }
 
-func (c *Client) Finish(ctx context.Context, reservationUid openapi_types.UUID, params *FinishParams, body FinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewFinishRequest(c.Server, reservationUid, params, body)
+func (c *Client) FinishWithBody(ctx context.Context, reservationUid openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFinishRequestWithBody(c.Server, reservationUid, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) Finish(ctx context.Context, reservationUid openapi_types.UUID, body FinishJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFinishRequest(c.Server, reservationUid, body)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +324,7 @@ func (c *Client) Health(ctx context.Context, reqEditors ...RequestEditorFn) (*ht
 }
 
 // NewListRequest generates requests for List
-func NewListRequest(server string, params *ListParams) (*http.Request, error) {
+func NewListRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -356,35 +347,22 @@ func NewListRequest(server string, params *ListParams) (*http.Request, error) {
 		return nil, err
 	}
 
-	if params != nil {
-
-		var headerParam0 string
-
-		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-User-Name", runtime.ParamLocationHeader, params.XUserName)
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("X-User-Name", headerParam0)
-
-	}
-
 	return req, nil
 }
 
 // NewCreateRequest calls the generic Create builder with application/json body
-func NewCreateRequest(server string, params *CreateParams, body CreateJSONRequestBody) (*http.Request, error) {
+func NewCreateRequest(server string, body CreateJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewCreateRequestWithBody(server, params, "application/json", bodyReader)
+	return NewCreateRequestWithBody(server, "application/json", bodyReader)
 }
 
 // NewCreateRequestWithBody generates requests for Create with any type of body
-func NewCreateRequestWithBody(server string, params *CreateParams, contentType string, body io.Reader) (*http.Request, error) {
+func NewCreateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -409,24 +387,11 @@ func NewCreateRequestWithBody(server string, params *CreateParams, contentType s
 
 	req.Header.Add("Content-Type", contentType)
 
-	if params != nil {
-
-		var headerParam0 string
-
-		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-User-Name", runtime.ParamLocationHeader, params.XUserName)
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("X-User-Name", headerParam0)
-
-	}
-
 	return req, nil
 }
 
 // NewGetRequest generates requests for Get
-func NewGetRequest(server string, reservationUid openapi_types.UUID, params *GetParams) (*http.Request, error) {
+func NewGetRequest(server string, reservationUid openapi_types.UUID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -456,35 +421,56 @@ func NewGetRequest(server string, reservationUid openapi_types.UUID, params *Get
 		return nil, err
 	}
 
-	if params != nil {
+	return req, nil
+}
 
-		var headerParam0 string
+// NewCancelRequest generates requests for Cancel
+func NewCancelRequest(server string, reservationUid openapi_types.UUID) (*http.Request, error) {
+	var err error
 
-		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-User-Name", runtime.ParamLocationHeader, params.XUserName)
-		if err != nil {
-			return nil, err
-		}
+	var pathParam0 string
 
-		req.Header.Set("X-User-Name", headerParam0)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "reservationUid", runtime.ParamLocationPath, reservationUid)
+	if err != nil {
+		return nil, err
+	}
 
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/reservations/%s/cancel", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
 	}
 
 	return req, nil
 }
 
 // NewFinishRequest calls the generic Finish builder with application/json body
-func NewFinishRequest(server string, reservationUid openapi_types.UUID, params *FinishParams, body FinishJSONRequestBody) (*http.Request, error) {
+func NewFinishRequest(server string, reservationUid openapi_types.UUID, body FinishJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewFinishRequestWithBody(server, reservationUid, params, "application/json", bodyReader)
+	return NewFinishRequestWithBody(server, reservationUid, "application/json", bodyReader)
 }
 
 // NewFinishRequestWithBody generates requests for Finish with any type of body
-func NewFinishRequestWithBody(server string, reservationUid openapi_types.UUID, params *FinishParams, contentType string, body io.Reader) (*http.Request, error) {
+func NewFinishRequestWithBody(server string, reservationUid openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -515,19 +501,6 @@ func NewFinishRequestWithBody(server string, reservationUid openapi_types.UUID, 
 	}
 
 	req.Header.Add("Content-Type", contentType)
-
-	if params != nil {
-
-		var headerParam0 string
-
-		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-User-Name", runtime.ParamLocationHeader, params.XUserName)
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("X-User-Name", headerParam0)
-
-	}
 
 	return req, nil
 }
@@ -603,20 +576,23 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 	// ListWithResponse request
-	ListWithResponse(ctx context.Context, params *ListParams, reqEditors ...RequestEditorFn) (*ListResponse, error)
+	ListWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListResponse, error)
 
 	// CreateWithBodyWithResponse request with any body
-	CreateWithBodyWithResponse(ctx context.Context, params *CreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateResponse, error)
+	CreateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateResponse, error)
 
-	CreateWithResponse(ctx context.Context, params *CreateParams, body CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateResponse, error)
+	CreateWithResponse(ctx context.Context, body CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateResponse, error)
 
 	// GetWithResponse request
-	GetWithResponse(ctx context.Context, reservationUid openapi_types.UUID, params *GetParams, reqEditors ...RequestEditorFn) (*GetResponse, error)
+	GetWithResponse(ctx context.Context, reservationUid openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetResponse, error)
+
+	// CancelWithResponse request
+	CancelWithResponse(ctx context.Context, reservationUid openapi_types.UUID, reqEditors ...RequestEditorFn) (*CancelResponse, error)
 
 	// FinishWithBodyWithResponse request with any body
-	FinishWithBodyWithResponse(ctx context.Context, reservationUid openapi_types.UUID, params *FinishParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FinishResponse, error)
+	FinishWithBodyWithResponse(ctx context.Context, reservationUid openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FinishResponse, error)
 
-	FinishWithResponse(ctx context.Context, reservationUid openapi_types.UUID, params *FinishParams, body FinishJSONRequestBody, reqEditors ...RequestEditorFn) (*FinishResponse, error)
+	FinishWithResponse(ctx context.Context, reservationUid openapi_types.UUID, body FinishJSONRequestBody, reqEditors ...RequestEditorFn) (*FinishResponse, error)
 
 	// HealthWithResponse request
 	HealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthResponse, error)
@@ -690,6 +666,27 @@ func (r GetResponse) StatusCode() int {
 	return 0
 }
 
+type CancelResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r CancelResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CancelResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type FinishResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -735,8 +732,8 @@ func (r HealthResponse) StatusCode() int {
 }
 
 // ListWithResponse request returning *ListResponse
-func (c *ClientWithResponses) ListWithResponse(ctx context.Context, params *ListParams, reqEditors ...RequestEditorFn) (*ListResponse, error) {
-	rsp, err := c.List(ctx, params, reqEditors...)
+func (c *ClientWithResponses) ListWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListResponse, error) {
+	rsp, err := c.List(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -744,16 +741,16 @@ func (c *ClientWithResponses) ListWithResponse(ctx context.Context, params *List
 }
 
 // CreateWithBodyWithResponse request with arbitrary body returning *CreateResponse
-func (c *ClientWithResponses) CreateWithBodyWithResponse(ctx context.Context, params *CreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateResponse, error) {
-	rsp, err := c.CreateWithBody(ctx, params, contentType, body, reqEditors...)
+func (c *ClientWithResponses) CreateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateResponse, error) {
+	rsp, err := c.CreateWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseCreateResponse(rsp)
 }
 
-func (c *ClientWithResponses) CreateWithResponse(ctx context.Context, params *CreateParams, body CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateResponse, error) {
-	rsp, err := c.Create(ctx, params, body, reqEditors...)
+func (c *ClientWithResponses) CreateWithResponse(ctx context.Context, body CreateJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateResponse, error) {
+	rsp, err := c.Create(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -761,25 +758,34 @@ func (c *ClientWithResponses) CreateWithResponse(ctx context.Context, params *Cr
 }
 
 // GetWithResponse request returning *GetResponse
-func (c *ClientWithResponses) GetWithResponse(ctx context.Context, reservationUid openapi_types.UUID, params *GetParams, reqEditors ...RequestEditorFn) (*GetResponse, error) {
-	rsp, err := c.Get(ctx, reservationUid, params, reqEditors...)
+func (c *ClientWithResponses) GetWithResponse(ctx context.Context, reservationUid openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetResponse, error) {
+	rsp, err := c.Get(ctx, reservationUid, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseGetResponse(rsp)
 }
 
+// CancelWithResponse request returning *CancelResponse
+func (c *ClientWithResponses) CancelWithResponse(ctx context.Context, reservationUid openapi_types.UUID, reqEditors ...RequestEditorFn) (*CancelResponse, error) {
+	rsp, err := c.Cancel(ctx, reservationUid, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCancelResponse(rsp)
+}
+
 // FinishWithBodyWithResponse request with arbitrary body returning *FinishResponse
-func (c *ClientWithResponses) FinishWithBodyWithResponse(ctx context.Context, reservationUid openapi_types.UUID, params *FinishParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FinishResponse, error) {
-	rsp, err := c.FinishWithBody(ctx, reservationUid, params, contentType, body, reqEditors...)
+func (c *ClientWithResponses) FinishWithBodyWithResponse(ctx context.Context, reservationUid openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FinishResponse, error) {
+	rsp, err := c.FinishWithBody(ctx, reservationUid, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseFinishResponse(rsp)
 }
 
-func (c *ClientWithResponses) FinishWithResponse(ctx context.Context, reservationUid openapi_types.UUID, params *FinishParams, body FinishJSONRequestBody, reqEditors ...RequestEditorFn) (*FinishResponse, error) {
-	rsp, err := c.Finish(ctx, reservationUid, params, body, reqEditors...)
+func (c *ClientWithResponses) FinishWithResponse(ctx context.Context, reservationUid openapi_types.UUID, body FinishJSONRequestBody, reqEditors ...RequestEditorFn) (*FinishResponse, error) {
+	rsp, err := c.Finish(ctx, reservationUid, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -882,6 +888,22 @@ func ParseGetResponse(rsp *http.Response) (*GetResponse, error) {
 		}
 		response.JSON404 = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParseCancelResponse parses an HTTP response from a CancelWithResponse call
+func ParseCancelResponse(rsp *http.Response) (*CancelResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CancelResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
 	}
 
 	return response, nil

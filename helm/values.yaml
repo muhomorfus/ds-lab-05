@@ -21,3 +21,5 @@ services:
   reservation: http://reservation
 
 port: 80
+
+jwksURI: http://keycloak.ds-labs-kub.tw1.ru/realms/ds-lab-05/protocol/openid-connect/certs

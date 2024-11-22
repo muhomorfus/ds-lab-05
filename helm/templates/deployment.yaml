@@ -42,3 +42,5 @@ spec:
               value: {{ quote .Values.services.rating }}
             - name: RESERVATION_ADDRESS
               value: {{ quote .Values.services.reservation }}
+            - name: JWKS_URI
+              value: {{ quote .Values.jwksURI }}
